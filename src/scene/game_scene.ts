@@ -1,14 +1,14 @@
+import { RefObject } from "react";
 import { BoxGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Scene, SRGBColorSpace, TextureLoader, WebGLRenderer } from "three";
 
 export class GameScene {
-    private static instance: GameScene;
 
     private _renderer: WebGLRenderer;
     private _camera: PerspectiveCamera;
     private _mesh: Mesh | null;
     private readonly _scene;
 
-    private constructor() {
+    public constructor() {
         this._renderer = new WebGLRenderer({
             antialias: true,
         });
@@ -16,14 +16,6 @@ export class GameScene {
         this._camera.position.z = 2;
         this._scene = new Scene();
         this._mesh = null;
-    }
-
-    static getInstance() {
-        if (this.instance) {
-            return this.instance;
-        }
-        this.instance = new GameScene();
-        return this.instance;
     }
 
     public load = () => {
@@ -35,20 +27,18 @@ export class GameScene {
 
         this._mesh = new Mesh(geometry, material);
         this._scene.add(this._mesh);
-    };
 
-    public render = () => {
         this._renderer.setPixelRatio(window.devicePixelRatio);
         this._renderer.setSize(window.innerWidth, window.innerHeight);
         this._renderer.render(this._scene, this._camera);
-        this._renderer.setAnimationLoop(this.animate);
+        this._renderer.setAnimationLoop(this._animate);
     };
 
-    public getDOMElement() {
-        return this._renderer.domElement;
-    }
+    public render = (refObject: RefObject<HTMLDivElement | null>) => {
+        refObject.current?.appendChild(this._renderer.domElement);
+    };
 
-    private animate = () => {
+    private _animate = () => {
         if (this._mesh) {
             this._mesh.rotation.x += 0.005;
             this._mesh.rotation.y += 0.01;

@@ -7,13 +7,9 @@ export default function GameComponent() {
     const [scene, setScene] = useState<GameScene | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
-        setScene(GameScene.getInstance());
+        if (!scene) setScene(new GameScene());
         scene?.load();
-        scene?.render();
-        const domElement = scene?.getDOMElement();
-        if (domElement) {
-            containerRef.current?.appendChild(domElement);
-        }
+        scene?.render(containerRef);
     });
 
     return (
