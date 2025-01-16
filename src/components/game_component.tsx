@@ -11,7 +11,6 @@ export default function GameComponent() {
     const div = containerRef.current;
     if (div) {
       const sc = new GameScene(div);
-      sc.load();
       sc.render(div);
       setScene(sc);
     }
