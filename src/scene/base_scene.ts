@@ -46,10 +46,10 @@ export abstract class BaseScene {
 
   protected abstract _setAnimationLoop(): void;
 
-  public render(div: HTMLDivElement): void {
+  public render = (div: HTMLDivElement): void => {
     this._loadMesh();
     this._renderer.setAnimationLoop(this._animate);
     this._setWindowResizeListener();
     div.appendChild(this._renderer.domElement);
-  }
+  };
 }
