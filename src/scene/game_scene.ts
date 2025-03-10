@@ -11,6 +11,8 @@ import {
   Vector2,
   PCFSoftShadowMap,
   AmbientLight,
+  BoxGeometry,
+  CylinderGeometry,
 } from "three";
 import { BaseScene } from "./base_scene";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
@@ -20,18 +22,23 @@ export class GameScene extends BaseScene {
   private _mouse: Vector2 | null = null;
   private _raycaster: Raycaster | null = null;
   private _orbitControls: OrbitControls | null = null;
-  private _primaryBall: Mesh<
-    SphereGeometry,
+  private _paddle1: Mesh<
+    CylinderGeometry,
     MeshStandardMaterial,
     Object3DEventMap
   > | null = null;
-  private _secondayBall: Mesh<
-    SphereGeometry,
+  private _paddle2: Mesh<
+    CylinderGeometry,
     MeshStandardMaterial,
     Object3DEventMap
   > | null = null;
-  private _plane: Mesh<
-    PlaneGeometry,
+  private _puck: Mesh<
+    CylinderGeometry,
+    MeshStandardMaterial,
+    Object3DEventMap
+  > | null = null;
+  private _table: Mesh<
+    BoxGeometry,
     MeshStandardMaterial,
     Object3DEventMap
   > | null = null;
@@ -42,14 +49,14 @@ export class GameScene extends BaseScene {
         antialias: true,
       }),
       camera: new PerspectiveCamera(
-        70,
-        container.offsetWidth / container.offsetHeight,
+        75,
+        window.innerWidth / window.innerHeight,
         0.1,
-        100
+        1000
       ),
       container: container,
     });
-    this._camera.position.set(5, 5, 5);
+    this._camera.position.set(0, 4, 5);
     this._camera.lookAt(0, 0, 0);
     this._renderer.setPixelRatio(window.devicePixelRatio);
     this._renderer.setSize(container.offsetWidth, container.offsetHeight);
@@ -57,36 +64,46 @@ export class GameScene extends BaseScene {
     this._renderer.shadowMap.type = PCFSoftShadowMap;
   }
 
-  public setSecondaryBall = (): void => {
-    const ballGeometry = new SphereGeometry(1, 32, 32);
-    const ballMaterial = new MeshStandardMaterial({ color: 0xff5733 });
-    this._secondayBall = new Mesh(ballGeometry, ballMaterial);
-    this._secondayBall.position.y = 1;
-    this._secondayBall.castShadow = true;
-    this._scene.add(this._secondayBall);
-  };
+  // public setSecondaryBall = (): void => {
+  //   const ballGeometry = new SphereGeometry(1, 32, 32);
+  //   const ballMaterial = new MeshStandardMaterial({ color: 0xff5733 });
+  //   this._secondayBall = new Mesh(ballGeometry, ballMaterial);
+  //   this._secondayBall.position.y = 1;
+  //   this._secondayBall.castShadow = true;
+  //   this._scene.add(this._secondayBall);
+  // };
 
-  public deleteSecondaryBall = (): void => {
-    if (this._secondayBall) this._scene.remove(this._secondayBall);
-    this._secondayBall?.geometry.dispose();
-    this._secondayBall?.material.dispose();
-    this._secondayBall = null;
-  };
+  // public deleteSecondaryBall = (): void => {
+  //   if (this._secondayBall) this._scene.remove(this._secondayBall);
+  //   this._secondayBall?.geometry.dispose();
+  //   this._secondayBall?.material.dispose();
+  //   this._secondayBall = null;
+  // };
 
   protected _loadMesh() {
-    const planeGeometry = new PlaneGeometry(20, 20);
-    const planeMaterial = new MeshStandardMaterial({ color: 0x808080 });
-    this._plane = new Mesh(planeGeometry, planeMaterial);
-    this._plane.rotation.x = -Math.PI / 2;
-    this._plane.receiveShadow = true;
-    this._scene.add(this._plane);
+    const tableGeometry = new BoxGeometry(6, 0.2, 3);
+    const tableMaterial = new MeshStandardMaterial({ color: 0x0099ff });
+    this._table = new Mesh(tableGeometry, tableMaterial);
+    this._table.position.y = -0.1;
+    this._scene.add(this._table);
 
-    const ballGeometry = new SphereGeometry(1, 32, 32);
-    const ballMaterial = new MeshStandardMaterial({ color: 0xff5733 });
-    this._primaryBall = new Mesh(ballGeometry, ballMaterial);
-    this._primaryBall.position.y = 1;
-    this._primaryBall.castShadow = true;
-    this._scene.add(this._primaryBall);
+    const paddleGeometry = new CylinderGeometry(0.3, 0.3, 0.1, 32);
+
+    const paddle1Material = new MeshStandardMaterial({ color: 0xff0000 });
+    this._paddle1 = new Mesh(paddleGeometry, paddle1Material);
+    this._paddle1.position.set(-2, 0.05, 0);
+    this._scene.add(this._paddle1);
+
+    const paddle2Material = new MeshStandardMaterial({ color: 0x00ff00 });
+    this._paddle2 = new Mesh(paddleGeometry, paddle2Material);
+    this._paddle2.position.set(2, 0.05, 0);
+    this._scene.add(this._paddle2);
+
+    const puckGeometry = new CylinderGeometry(0.2, 0.2, 0.05, 32);
+    const puckMaterial = new MeshStandardMaterial({ color: 0x111111 });
+    this._puck = new Mesh(puckGeometry, puckMaterial);
+    this._puck.position.set(0, 0.025, 0);
+    this._scene.add(this._puck);
 
     const light = new PointLight(0xffffff, 15, 0);
     light.position.set(5, 10, 5);
@@ -116,8 +133,8 @@ export class GameScene extends BaseScene {
   private _onPointerDown = (event: PointerEvent): void => {
     this._updateRaycaster(event);
     this._isDragging = true;
-    if (this._raycaster && this._primaryBall && this._orbitControls) {
-      const intersectsBall = this._raycaster.intersectObject(this._primaryBall);
+    if (this._raycaster && this._paddle1 && this._orbitControls) {
+      const intersectsBall = this._raycaster.intersectObject(this._paddle1);
       if (intersectsBall.length > 0) {
         this._orbitControls.enabled = false;
       }
@@ -136,18 +153,18 @@ export class GameScene extends BaseScene {
       !this._mouse ||
       !this._raycaster ||
       !this._orbitControls ||
-      !this._primaryBall ||
-      !this._plane
+      !this._paddle1 ||
+      !this._table
     )
       return;
 
     this._updateRaycaster(event);
 
     if (!this._orbitControls.enabled) {
-      const intersectsPlane = this._raycaster.intersectObject(this._plane);
+      const intersectsPlane = this._raycaster.intersectObject(this._table);
       if (intersectsPlane.length > 0) {
         const point = intersectsPlane[0].point;
-        this._primaryBall.position.set(point.x, 1, point.z);
+        this._paddle1.position.set(point.x, 0.05, point.z);
       }
     }
   };
