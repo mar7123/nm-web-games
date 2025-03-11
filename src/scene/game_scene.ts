@@ -13,13 +13,13 @@ import {
   AmbientLight,
   BoxGeometry,
   CylinderGeometry,
+  Color,
 } from "three";
 import { BaseScene } from "./base_scene";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 export class GameScene extends BaseScene {
   private _isDragging: boolean = false;
-  private _mouse: Vector2 | null = null;
   private _raycaster: Raycaster | null = null;
   private _orbitControls: OrbitControls | null = null;
   private _paddle1: Mesh<
@@ -60,8 +60,6 @@ export class GameScene extends BaseScene {
     this._camera.lookAt(0, 0, 0);
     this._renderer.setPixelRatio(window.devicePixelRatio);
     this._renderer.setSize(container.offsetWidth, container.offsetHeight);
-    this._renderer.shadowMap.enabled = true; // Enable shadow maps
-    this._renderer.shadowMap.type = PCFSoftShadowMap;
   }
 
   // public setSecondaryBall = (): void => {
@@ -92,6 +90,7 @@ export class GameScene extends BaseScene {
     const paddle1Material = new MeshStandardMaterial({ color: 0xff0000 });
     this._paddle1 = new Mesh(paddleGeometry, paddle1Material);
     this._paddle1.position.set(-2, 0.05, 0);
+    this._table;
     this._scene.add(this._paddle1);
 
     const paddle2Material = new MeshStandardMaterial({ color: 0x00ff00 });
@@ -105,15 +104,14 @@ export class GameScene extends BaseScene {
     this._puck.position.set(0, 0.025, 0);
     this._scene.add(this._puck);
 
-    const light = new PointLight(0xffffff, 15, 0);
-    light.position.set(5, 10, 5);
-    light.castShadow = true;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
+    const light = new PointLight(0xffffff, 1.2);
+    light.position.set(0, 5, 5);
     this._scene.add(light);
 
-    const ambientLight = new AmbientLight(0x404040, 3);
+    const ambientLight = new AmbientLight(0xffffff, 0.5);
     this._scene.add(ambientLight);
+
+    this._scene.background = new Color(0x222222);
 
     this._orbitControls = new OrbitControls(
       this._camera,
@@ -121,7 +119,6 @@ export class GameScene extends BaseScene {
     );
 
     this._raycaster = new Raycaster();
-    this._mouse = new Vector2();
 
     window.addEventListener("pointerdown", this._onPointerDown);
     window.addEventListener("pointerup", this._onPointerUp);
@@ -150,7 +147,6 @@ export class GameScene extends BaseScene {
   private _onPointerMove = (event: PointerEvent): void => {
     if (
       !this._isDragging ||
-      !this._mouse ||
       !this._raycaster ||
       !this._orbitControls ||
       !this._paddle1 ||
@@ -170,9 +166,11 @@ export class GameScene extends BaseScene {
   };
 
   private _updateRaycaster = (event: PointerEvent): void => {
-    if (!this._mouse || !this._raycaster) return;
-    this._mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    this._mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    this._raycaster.setFromCamera(this._mouse, this._camera);
+    if (!this._raycaster) return;
+    const mouse = new Vector2(
+      (event.clientX / window.innerWidth) * 2 - 1,
+      -(event.clientY / window.innerHeight) * 2 + 1
+    );
+    this._raycaster.setFromCamera(mouse, this._camera);
   };
 }
