@@ -7,7 +7,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   if (
-    url.pathname.includes("/flutter_service_worker") ||
+    url.pathname.includes("flutter_service_worker") ||
+    url.pathname.includes("main.dart.js") ||
     request.headers.get("Referer")?.includes("flutter_service_worker") ||
     url.pathname.startsWith("/assets")
   ) {
